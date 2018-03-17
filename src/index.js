@@ -9,8 +9,7 @@ import { gui } from './utils/debug'
 /* ----------------------------- THREE JS SCENE ----------------------------------------------- */
 const THREE = require('three')
 const socket = require('socket.io')
-// initializeVisual()
-// function initializeVisual(){
+
 /* Custom settings */
 const SETTINGS = {
   useComposer: false
@@ -19,7 +18,7 @@ const SETTINGS = {
 /* Init renderer and canvas */
 const container = document.body
 const renderer = new THREE.WebGLRenderer({antialias: true})
-renderer.setClearColor(0x323232)
+renderer.setClearColor(0x000000)
 renderer.setPixelRatio(window.devicePixelRatio)
 renderer.setSize(window.innerWidth, window.innerHeight)
 container.style.overflow = 'hidden'
@@ -33,7 +32,7 @@ const fxaaPass = new FXAAPass()
 
 /* Main scene and camera */
 const scene = new THREE.Scene()
-const camera = new THREE.PerspectiveCamera(50, resize.width / resize.height, 1, 10000)
+const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 1, 10000)
 camera.position.z = 1000
 const controls = new OrbitControls(camera, {element: renderer.domElement, parent: renderer.domElement, distance: 10, phi: Math.PI * 0.5})
 
@@ -47,110 +46,94 @@ backLight.position.x = -20
 
 /* Actual content of the scene */
 
-// const torus = new Torus()
-// scene.add(torus)
+let hilbertPoints = hilbert3D(new THREE.Vector3(0, 0, 0), 200.0, 1, 0, 1, 2, 3, 4, 5, 6, 7);
+let i
+let material
 
-// adding wireframe sphere
-var geometry = new THREE.SphereBufferGeometry(5, 5, 5);
+//Colors with BufferGeometry
+let buffGeometry0 = new THREE.BufferGeometry()
+let buffGeometry1 = new THREE.BufferGeometry()
+let buffGeometry2 = new THREE.BufferGeometry()
 
-var wireframe = new THREE.WireframeGeometry(geometry);
+let subdivisions = 1000;
 
-var line = new THREE.LineSegments(wireframe);
-line.material.depthTest = false;
-line.material.opacity = 0.25;
-line.material.transparent = true;
+let position = []
+let colorArray0 = []
+let colorArray1 = []
+let colorArray2 = []
 
-scene.add(line);
+let point = new THREE.Vector3();
+let color = new THREE.Color();
 
-// adding own torus
+let spline = new THREE.CatmullRomCurve3(hilbertPoints);
+for (i = 0; i < hilbertPoints.length * subdivisions; i++) {
+  let t = i / (hilbertPoints.length * subdivisions);
+  spline.getPoint(t, point);
+  position.push(point.x, point.y, point.z);
+  color.setHSL(0.6, 1.0, Math.max(0, - point.x / 200) + 0.5);
+  colorArray0.push(color.r, color.g, color.b);
+  color.setHSL(0.9, 1.0, Math.max(0, - point.y / 200) + 0.5);
+  colorArray1.push(color.r, color.g, color.b);
+  color.setHSL(i / (hilbertPoints.length * subdivisions), 1.0, 0.5);
+  colorArray2.push(color.r, color.g, color.b);
+}
+buffGeometry0.addAttribute('position', new THREE.Float32BufferAttribute(position, 3));
+buffGeometry1.addAttribute('position', new THREE.Float32BufferAttribute(position, 3));
+buffGeometry2.addAttribute('position', new THREE.Float32BufferAttribute(position, 3));
+buffGeometry0.addAttribute('color', new THREE.Float32BufferAttribute(colorArray0, 3));
+buffGeometry1.addAttribute('color', new THREE.Float32BufferAttribute(colorArray1, 3));
+buffGeometry2.addAttribute('color', new THREE.Float32BufferAttribute(colorArray2, 3));
 
-var geometry = new THREE.TorusGeometry(15, 3, 45, 10);
-var material = new THREE.MeshStandardMaterial({ color: 0xA197C9, roughness: 0.55 })
-var torus = new THREE.Mesh(geometry, material);
+// Colors with Geometry
+let geometry0 = new THREE.Geometry(),
+  geometry2 = new THREE.Geometry(),
+  geometry3 = new THREE.Geometry();
+let colors0 = [],
+  colors1 = [],
+  colors2 = [];
+for (i = 0; i < hilbertPoints.length; i++) {
+  geometry0.vertices.push(hilbertPoints[i]);
+  colors0[i] = new THREE.Color(0xffffff);
+  colors0[i].setHSL(0.6, 1.0, Math.max(0, (200 - hilbertPoints[i].x) / 400) * 0.5 + 0.5);
+  colors1[i] = new THREE.Color(0xffffff);
+  colors1[i].setHSL(0.3, 1.0, Math.max(0, (200 + hilbertPoints[i].x) / 400) * 0.5);
+  colors2[i] = new THREE.Color(0xffffff);
+  colors2[i].setHSL(i / hilbertPoints.length, 1.0, 0.5);
+}
+geometry2.vertices = geometry3.vertices = geometry0.vertices;
+geometry0.colors = colors0;
+geometry2.colors = colors1;
+geometry3.colors = colors2;
 
-scene.add(torus);
+// Create lines and add to scene
+material = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 1, linewidth: 3, vertexColors: THREE.VertexColors });
+let line, p, scale = 0.3, d = 225;
+let parameters = [
+  [material, scale * 1, [- d, - d / 2, 0], buffGeometry0],
+  [material, scale * 1, [0, - d / 2, 0], buffGeometry1],
+  [material, scale * 1, [d, - d / 2, 0], buffGeometry2],
+  [material, scale * 1, [- d, d / 2, 0], geometry0],
+  [material, scale * 1, [0, d / 2, 0], geometry2],
+  [material, scale * 1, [d, d / 2, 0], geometry3],
+];
+for (i = 0; i < parameters.length; i++) {
+  p = parameters[i];
+  line = new THREE.Line(p[3], p[0]);
+  line.scale.x = line.scale.y = line.scale.z = p[1];
+  line.position.x = p[2][0];
+  line.position.y = p[2][1];
+  line.position.z = p[2][2];
+  scene.add(line)
+  ;
+}
 
-// initializeVisual()
-// function initializeVisual () {
-//var hilbertPoints = hilbert3D(new THREE.Vector3(0, 0, 0), 200.0, 1, 0, 1, 2, 3, 4, 5, 6, 7);
-// Colors with BufferGeometry
-// var buffGeometry0 = new THREE.BufferGeometry(),
-//   buffGeometry1 = new THREE.BufferGeometry(),
-//   buffGeometry2 = new THREE.BufferGeometry();
-
-// var subdivisions = 6;
-
-// var position = [],
-//   colorArray0 = [],
-//   colorArray1 = [],
-//   colorArray2 = [];
-
-// var point = new THREE.Vector3();
-// var color = new THREE.Color();
-
-// var spline = new THREE.CatmullRomCurve3(hilbertPoints);
-// for (i = 0; i < hilbertPoints.length * subdivisions; i++) {
-//   var t = i / (hilbertPoints.length * subdivisions);
-//   spline.getPoint(t, point);
-//   position.push(point.x, point.y, point.z);
-//   color.setHSL(0.6, 1.0, Math.max(0, - point.x / 200) + 0.5);
-//   colorArray0.push(color.r, color.g, color.b);
-//   color.setHSL(0.9, 1.0, Math.max(0, - point.y / 200) + 0.5);
-//   colorArray1.push(color.r, color.g, color.b);
-//   color.setHSL(i / (hilbertPoints.length * subdivisions), 1.0, 0.5);
-//   colorArray2.push(color.r, color.g, color.b);
-// }
-// buffGeometry0.addAttribute('position', new THREE.Float32BufferAttribute(position, 3));
-// buffGeometry1.addAttribute('position', new THREE.Float32BufferAttribute(position, 3));
-// buffGeometry2.addAttribute('position', new THREE.Float32BufferAttribute(position, 3));
-// buffGeometry0.addAttribute('color', new THREE.Float32BufferAttribute(colorArray0, 3));
-// buffGeometry1.addAttribute('color', new THREE.Float32BufferAttribute(colorArray1, 3));
-// buffGeometry2.addAttribute('color', new THREE.Float32BufferAttribute(colorArray2, 3));
-// // Colors with Geometry
-// var geometry0 = new THREE.Geometry(),
-//   geometry2 = new THREE.Geometry(),
-//   geometry3 = new THREE.Geometry();
-// var colors0 = [],
-//   colors1 = [],
-//   colors2 = [];
-// for (i = 0; i < hilbertPoints.length; i++) {
-//   geometry0.vertices.push(hilbertPoints[i]);
-//   colors0[i] = new THREE.Color(0xffffff);
-//   colors0[i].setHSL(0.6, 1.0, Math.max(0, (200 - hilbertPoints[i].x) / 400) * 0.5 + 0.5);
-//   colors1[i] = new THREE.Color(0xffffff);
-//   colors1[i].setHSL(0.3, 1.0, Math.max(0, (200 + hilbertPoints[i].x) / 400) * 0.5);
-//   colors2[i] = new THREE.Color(0xffffff);
-//   colors2[i].setHSL(i / hilbertPoints.length, 1.0, 0.5);
-// }
-// geometry2.vertices = geometry3.vertices = geometry0.vertices;
-// geometry0.colors = colors0;
-// geometry2.colors = colors1;
-// geometry3.colors = colors2;
-// // Create lines and add to scene
-// material = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 1, linewidth: 3, vertexColors: THREE.VertexColors });
-// var line, p, scale = 0.3, d = 225;
-// var parameters = [
-//   [material, scale * 1.5, [- d, - d / 2, 0], buffGeometry0],
-//   [material, scale * 1.5, [0, - d / 2, 0], buffGeometry1],
-//   [material, scale * 1.5, [d, - d / 2, 0], buffGeometry2],
-//   [material, scale * 1.5, [- d, d / 2, 0], geometry0],
-//   [material, scale * 1.5, [0, d / 2, 0], geometry2],
-//   [material, scale * 1.5, [d, d / 2, 0], geometry3],
-// ];
-// for (i = 0; i < parameters.length; i++) {
-//   p = parameters[i];
-//   line = new THREE.Line(p[3], p[0]);
-//   line.scale.x = line.scale.y = line.scale.z = p[1];
-//   line.position.x = p[2][0];
-//   line.position.y = p[2][1];
-//   line.position.z = p[2][2];
-//   scene.add(line);
-// }
+// animation for line
+function animate() {
+line.rotation.x += 0.01
+line.rotation.y += 0.01
+}
 // // Input Event Listeners
-// document.addEventListener('mousemove', onDocumentMouseMove, false);
-// document.addEventListener('touchstart', onDocumentTouchStart, false);
-// document.addEventListener('touchmove', onDocumentTouchMove, false);
-// }
+
 /* Various event listeners */
 resize.addListener(onResize)
 
@@ -167,10 +150,10 @@ gui.add(SETTINGS, 'useComposer')
   Resize canvas
 */
 function onResize () {
-  camera.aspect = resize.width / resize.height
+  camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
-  renderer.setSize(resize.width, resize.height)
-  composer.setSize(resize.width, resize.height)
+  renderer.setSize(window.innerWidth , window.innerHeight)
+  composer.setSize(window.innerWidth , window.innerHeight)
 }
 
 /**
@@ -185,14 +168,12 @@ function render (dt) {
     composer.pass(fxaaPass)
     composer.toScreen()
   } else {
-    torus.rotation.x += 0.01
-    torus.rotation.y += 0.01
+    line.rotation.x += 0.01
+    line.rotation.y += 0.01
     renderer.render(scene, camera)
   }
 }
 
-
-// functions for three scene
 
 /* ----------------------------- handling midi data --------------------------------*/
 const context = new AudioContext()
@@ -221,14 +202,8 @@ function onMIDIFailure() {
 // GETTING MIDI DATA
 function onMIDImessage(messageData) {
   let midiEvent = messageData.data
-  console.log(midiEvent)
+  console.log(midiEvent[0], midiEvent[1], midiEvent[2])
   
-  
-  //var newItem = document.createElement('li');
-  //newItem.appendChild(document.createTextNode(messageData.data));
-  //newItem.className = 'user-midi';
-  //document.getElementById('midi-data').prepend(newItem);
-
   // SYNTH SOUNDS
 
   const note = {
@@ -237,6 +212,22 @@ function onMIDImessage(messageData) {
     velocity: midiEvent[2]
   }
   play(note);
+  // creating new visuals with midi event
+  let curve = new THREE.QuadraticBezierCurve3(
+    new THREE.Vector3(midiEvent[0]/getRandomInt(15), 0, 0),
+    new THREE.Vector3(20, midiEvent[1]/getRandomInt(2), 0),
+    new THREE.Vector3(midiEvent[2]/getRandomInt(3), 1, 0)
+  );
+
+  let points = curve.getPoints(50);
+  let geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+  let material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+
+  // Create the final object to add to the scene
+  let curveObject = new THREE.Line(geometry, material);
+  scene.add(curveObject)
+
 
   // emit to socket
   socket.emit('midi', note)
@@ -278,4 +269,73 @@ function gotExternalMidiMessage(data) {
   document.getElementById('midi-data').prepend(newItem)
 
   playNote()
+}
+
+// random number function
+function getRandomInt(max) {
+  return Math.floor(Math.random() * Math.floor(max));
+}
+
+
+// function for hilbert 3D
+function hilbert3D(center, size, iterations, v0, v1, v2, v3, v4, v5, v6, v7) {
+  // Default Vars
+  var center = undefined !== center ? center : new THREE.Vector3(0, 0, 0),
+    size = undefined !== size ? size : 10,
+    half = size / 2,
+    iterations = undefined !== iterations ? iterations : 1,
+    v0 = undefined !== v0 ? v0 : 0,
+    v1 = undefined !== v1 ? v1 : 1,
+    v2 = undefined !== v2 ? v2 : 2,
+    v3 = undefined !== v3 ? v3 : 3,
+    v4 = undefined !== v4 ? v4 : 4,
+    v5 = undefined !== v5 ? v5 : 5,
+    v6 = undefined !== v6 ? v6 : 6,
+    v7 = undefined !== v7 ? v7 : 7
+    ;
+
+  var vec_s = [
+    new THREE.Vector3(center.x - half, center.y + half, center.z - half),
+    new THREE.Vector3(center.x - half, center.y + half, center.z + half),
+    new THREE.Vector3(center.x - half, center.y - half, center.z + half),
+    new THREE.Vector3(center.x - half, center.y - half, center.z - half),
+    new THREE.Vector3(center.x + half, center.y - half, center.z - half),
+    new THREE.Vector3(center.x + half, center.y - half, center.z + half),
+    new THREE.Vector3(center.x + half, center.y + half, center.z + half),
+    new THREE.Vector3(center.x + half, center.y + half, center.z - half)
+  ];
+
+  var vec = [
+    vec_s[v0],
+    vec_s[v1],
+    vec_s[v2],
+    vec_s[v3],
+    vec_s[v4],
+    vec_s[v5],
+    vec_s[v6],
+    vec_s[v7]
+  ];
+
+  // Recurse iterations
+  if (--iterations >= 0) {
+
+    var tmp = [];
+
+    Array.prototype.push.apply(tmp, hilbert3D(vec[0], half, iterations, v0, v3, v4, v7, v6, v5, v2, v1));
+    Array.prototype.push.apply(tmp, hilbert3D(vec[1], half, iterations, v0, v7, v6, v1, v2, v5, v4, v3));
+    Array.prototype.push.apply(tmp, hilbert3D(vec[2], half, iterations, v0, v7, v6, v1, v2, v5, v4, v3));
+    Array.prototype.push.apply(tmp, hilbert3D(vec[3], half, iterations, v2, v3, v0, v1, v6, v7, v4, v5));
+    Array.prototype.push.apply(tmp, hilbert3D(vec[4], half, iterations, v2, v3, v0, v1, v6, v7, v4, v5));
+    Array.prototype.push.apply(tmp, hilbert3D(vec[5], half, iterations, v4, v3, v2, v5, v6, v1, v0, v7));
+    Array.prototype.push.apply(tmp, hilbert3D(vec[6], half, iterations, v4, v3, v2, v5, v6, v1, v0, v7));
+    Array.prototype.push.apply(tmp, hilbert3D(vec[7], half, iterations, v6, v5, v2, v1, v0, v3, v4, v7));
+
+    // Return recursive call
+    return tmp;
+
+  }
+
+  // Return complete Hilbert Curve.
+  return vec;
+
 }
