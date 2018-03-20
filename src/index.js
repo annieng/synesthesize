@@ -12,7 +12,7 @@ const socket = require('socket.io')
 
 /* Custom settings */
 const SETTINGS = {
-  useComposer: false
+  useComposer: true
 }
 
 /* Init renderer and canvas */
@@ -32,9 +32,11 @@ const fxaaPass = new FXAAPass()
 
 /* Main scene and camera */
 const scene = new THREE.Scene()
-const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 1, 10000)
-camera.position.z = 1000
+const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 100000)
 const controls = new OrbitControls(camera, {element: renderer.domElement, parent: renderer.domElement, distance: 10, phi: Math.PI * 0.5})
+camera.position.z = 100000
+camera.position.x = 60000
+camera.position.y = 90000
 
 /* Lights */
 const frontLight = new THREE.PointLight(0xFFFFFF, 1)
@@ -44,9 +46,11 @@ scene.add(backLight)
 frontLight.position.x = 20
 backLight.position.x = -20
 
+
+
 /* Actual content of the scene */
 
-let hilbertPoints = hilbert3D(new THREE.Vector3(0, 0, 0), 200.0, 1, 0, 1, 2, 3, 4, 5, 6, 7);
+let hilbertPoints = hilbert3D(new THREE.Vector3(0, 0, 0), 250.0, 1, 0, 1, 2, 3, 4, 5, 6, 7);
 let i
 let material
 
@@ -55,7 +59,7 @@ let buffGeometry0 = new THREE.BufferGeometry()
 let buffGeometry1 = new THREE.BufferGeometry()
 let buffGeometry2 = new THREE.BufferGeometry()
 
-let subdivisions = 1000;
+let subdivisions = 4;
 
 let position = []
 let colorArray0 = []
@@ -120,18 +124,21 @@ for (i = 0; i < parameters.length; i++) {
   p = parameters[i];
   line = new THREE.Line(p[3], p[0]);
   line.scale.x = line.scale.y = line.scale.z = p[1];
-  line.position.x = p[2][0];
-  line.position.y = p[2][1];
-  line.position.z = p[2][2];
-  scene.add(line)
-  ;
-}
+  line.position.x = p[2][0] ;
+  line.position.y = p[2][1] ;
+  line.position.z = p[2][2] ;
+  scene.add(line) 
+  animate()
+  }
+  // animation for line
+  function animate() {
+    requestAnimationFrame(animate)
+    line.rotation.x += 0.01
+    line.rotation.y += 0.01
+    renderer.render(scene, camera);
+  }
 
-// animation for line
-function animate() {
-line.rotation.x += 0.01
-line.rotation.y += 0.01
-}
+
 // // Input Event Listeners
 
 /* Various event listeners */
@@ -159,6 +166,7 @@ function onResize () {
 /**
   Render loop
 */
+render()
 function render (dt) {
   controls.update()
   if (SETTINGS.useComposer) {
@@ -211,27 +219,77 @@ function onMIDImessage(messageData) {
     pitch: midiEvent[1],
     velocity: midiEvent[2]
   }
+
   play(note);
+
   // creating new visuals with midi event
-  let curve = new THREE.QuadraticBezierCurve3(
-    new THREE.Vector3(midiEvent[0]/getRandomInt(15), 0, 0),
-    new THREE.Vector3(20, midiEvent[1]/getRandomInt(2), 0),
-    new THREE.Vector3(midiEvent[2]/getRandomInt(3), 1, 0)
-  );
+  animateCamera()  
+  if(midiEvent[0] === 128){
+  let newSpline = new ConstantSpline(
+    new THREE.Vector3((.5 - Math.random()) * 1000, (.5 - Math.random()) * 1000, (.5 - Math.random()) * 1000),
+    new THREE.Vector3((.5 - Math.random()) * 1000, (.5 - Math.random()) * 1000, (.5 - Math.random()) * 1000),
+    new THREE.Vector3((.5 - Math.random()) * 1000, (.5 - Math.random()) * 1000, (.5 - Math.random()) * 1000),
+    new THREE.Vector3((.5 - Math.random()) * 1000, (.5 - Math.random()) * 1000, (.5 - Math.random()) * 1000),
 
-  let points = curve.getPoints(50);
-  let geometry = new THREE.BufferGeometry().setFromPoints(points);
+    new THREE.Vector3((.5 - Math.random()) * 1000, (.5 - Math.random()) * 1000, (.5 - Math.random()) * 1000),
+    new THREE.Vector3((.5 - Math.random()) * 1000, (.5 - Math.random()) * 1000, (.5 - Math.random()) * 1000),
+    new THREE.Vector3((.5 - Math.random()) * 1000, (.5 - Math.random()) * 1000, (.5 - Math.random()) * 1000),
 
-  let material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+    [],
+    [],
+    [],
+    0.1,
+    0,
+    false
+  )
+  console.log(newSpline)
 
-  // Create the final object to add to the scene
-  let curveObject = new THREE.Line(geometry, material);
-  scene.add(curveObject)
+  calculate(newSpline)
+  calculateDistances(newSpline)
+  reticulate(newSpline, {distancePerStep: 10})
 
+  let geometry = new THREE.Geometry()
+
+  for (var j = 0; j < newSpline.lPoints.length - 1; j++) {
+
+    var from = newSpline.lPoints[j],
+      to = newSpline.lPoints[j + 1];
+    geometry.vertices.push(from.clone());
+    geometry.vertices.push(to.clone());
+
+  }
+
+  material = new THREE.LineBasicMaterial({
+    color: 0x404040 + Math.random() * 0xbfbfbf,
+    linewidth: 4
+  });
+
+  var line = new THREE.Line(geometry, material);
+  scene.add(line);
+  console.log(line)
 
   // emit to socket
-  socket.emit('midi', note)
+  // socket.emit('midi', note)
 
+  }
+}
+
+// camera position animate
+function animateCamera() {
+  let rotation = 0.4
+  camera.position.x = camera.position.x * Math.cos(rotation) + camera.position.z * Math.sin(rotation)
+  camera.position.y = camera.position.y * Math.sin(rotation) + camera.position.x * Math.cos(rotation)
+  camera.position.z = camera.position.z * Math.cos(rotation) - camera.position.x * Math.sin(rotation)
+
+  camera.position.x += (Math.random() - 0.5) * 2
+  camera.position.y += (Math.random() - 0.5) * 2
+  camera.position.z += (Math.random() - 0.5) * 2
+
+  console.log('rotation: ' + camera.rotation.x, camera.rotation.y, camera.rotation.z)
+  console.log('position: ' + camera.position.x, camera.position.y, camera.position.z)
+}
+
+// function to play note on midiEvent message
   function play(note) {
     switch (note.on) {
       case 144:
@@ -256,7 +314,7 @@ function onMIDImessage(messageData) {
       oscillators[frequency].disconnect();
     }
   }
-}
+
 
 // setting up ability to receive external notes from other players
 
@@ -271,13 +329,7 @@ function gotExternalMidiMessage(data) {
   playNote()
 }
 
-// random number function
-function getRandomInt(max) {
-  return Math.floor(Math.random() * Math.floor(max));
-}
-
-
-// function for hilbert 3D
+// Function for 3D Hilbert Curve -- should be moved out of file eventually COME BACK
 function hilbert3D(center, size, iterations, v0, v1, v2, v3, v4, v5, v6, v7) {
   // Default Vars
   var center = undefined !== center ? center : new THREE.Vector3(0, 0, 0),
@@ -318,7 +370,6 @@ function hilbert3D(center, size, iterations, v0, v1, v2, v3, v4, v5, v6, v7) {
 
   // Recurse iterations
   if (--iterations >= 0) {
-
     var tmp = [];
 
     Array.prototype.push.apply(tmp, hilbert3D(vec[0], half, iterations, v0, v3, v4, v7, v6, v5, v2, v1));
@@ -332,10 +383,157 @@ function hilbert3D(center, size, iterations, v0, v1, v2, v3, v4, v5, v6, v7) {
 
     // Return recursive call
     return tmp;
+  }
+  // Return complete Hilbert Curve.
+  return vec;
+}
+
+// CONSTRUCTOR FOR SPLINE
+
+function ConstantSpline(p0, p1, p2, p3, tmp, res, o, points, lPoints, steps, inc, d, distancesNeedUpdate) {
+  this.p0 = p0
+  this.p1 = p1
+  this.p2 = p2
+  this.p3 = p3
+
+  this.tmp = tmp
+  this.res = res
+  this.o = o
+
+  this.points = points
+  this.lPoints = lPoints
+  this.steps = steps
+
+  this.inc = inc
+  this.d = d
+
+  this.distancesNeedUpdate = distancesNeedUpdate
+}
+
+// FUNCTIONS FOR SPLINEDRAW
+function calculate(obj) {
+  // calculate points
+  obj.d = 0;
+  obj.points = [];
+
+  obj.o.copy(obj.p0);
+
+  for (var j = 0; j <= 1; j += obj.inc) {
+
+    var i = (1 - j);
+    var ii = i * i;
+    var iii = ii * i;
+    var jj = j * j;
+    var jjj = jj * j;
+
+    obj.res.set(0, 0, 0);
+
+    obj.tmp.copy(obj.p0);
+    obj.tmp.multiplyScalar(iii);
+    obj.res.add(obj.tmp);
+
+    obj.tmp.copy(obj.p1);
+    obj.tmp.multiplyScalar(3 * j * ii);
+    obj.res.add(obj.tmp);
+
+    obj.tmp.copy(obj.p2);
+    obj.tmp.multiplyScalar(3 * jj * i);
+    obj.res.add(obj.tmp);
+
+    obj.tmp.copy(obj.p3);
+    obj.tmp.multiplyScalar(jjj);
+    obj.res.add(obj.tmp);
+
+    obj.points.push(obj.res.clone());
 
   }
 
-  // Return complete Hilbert Curve.
-  return vec;
+  obj.points.push(obj.p3.clone());
+
+  obj.distancesNeedUpdate = true;
+  console.log(obj.points)
+}
+
+function calculateDistances(obj) {
+
+  obj.steps = [];
+  obj.d = 0;
+
+  var from, to, td = 0;
+
+  for (var j = 0; j < obj.points.length - 1; j++) {
+
+    obj.points[j].distance = td;
+    obj.points[j].ac = obj.d;
+
+    from = obj.points[j],
+      to = obj.points[j + 1],
+      td = to.distanceTo(from);
+
+    obj.d += td;
+  }
+  obj.points[obj.points.length - 1].distance = 0;
+  obj.points[obj.points.length - 1].ac = obj.d;
+}
+
+function reticulate(obj, settings) {
+
+  if (obj.distancesNeedUpdate) {
+    calculateDistances(obj);
+    obj.distancesNeedUpdate = false;
+  }
+
+  obj.lPoints = [];
+
+  var l = [];
+
+  var steps, distancePerStep;
+
+  if (settings.steps) {
+    steps = settings.steps;
+    distancePerStep = obj.d / steps;
+  }
+
+  if (settings.distancePerStep) {
+    distancePerStep = settings.distancePerStep;
+    steps = obj.d / distancePerStep;
+  }
+
+  var d = 0,
+    p = 0;
+
+  obj.lPoints = [];
+
+  var current = new THREE.Vector3();
+  current.copy(obj.points[0].clone());
+  obj.lPoints.push(current.clone());
+
+  function splitSegment(a, b, l) {
+
+    var t = b.clone();
+    var d = 0;
+    t.sub(a);
+    var rd = t.length();
+    t.normalize();
+    t.multiplyScalar(distancePerStep);
+    var s = Math.floor(rd / distancePerStep);
+    for (var j = 0; j < s; j++) {
+      a.add(t);
+      l.push(a.clone());
+      d += distancePerStep;
+    }
+    return d;
+  }
+
+  for (var j = 0; j < obj.points.length; j++) {
+
+    if (obj.points[j].ac - d > distancePerStep) {
+
+      d += splitSegment(current, obj.points[j], obj.lPoints);
+
+    }
+
+  }
+  obj.lPoints.push(obj.points[obj.points.length - 1].clone());
 
 }
