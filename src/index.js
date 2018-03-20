@@ -35,7 +35,7 @@ const scene = new THREE.Scene()
 const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 100000)
 const controls = new OrbitControls(camera, {element: renderer.domElement, parent: renderer.domElement, distance: 10, phi: Math.PI * 0.5})
 camera.position.z = 100000
-camera.position.x = 60000
+camera.position.x = 90000
 camera.position.y = 90000
 
 /* Lights */
@@ -238,7 +238,7 @@ function onMIDImessage(messageData) {
     [],
     [],
     [],
-    0.1,
+    0.01,
     0,
     false
   )
@@ -266,6 +266,7 @@ function onMIDImessage(messageData) {
 
   var line = new THREE.Line(geometry, material);
   scene.add(line);
+  //animateSpline()
   console.log(line)
 
   // emit to socket
@@ -273,10 +274,20 @@ function onMIDImessage(messageData) {
 
   }
 }
+// function to animate spline
+function animateSpline() {
+  console.log('spline1: ' + line.position.x, line.position.y, line.position.z)
 
+  line.position.x += Math.random() * 10
+  line.position.y += Math.random() * 10
+  line.position.z += Math.random() * 10
+
+  console.log('spline2: ' + line.position.x, line.position.y, line.position.z)
+
+}
 // camera position animate
 function animateCamera() {
-  let rotation = 0.4
+  let rotation = 0.04
   camera.position.x = camera.position.x * Math.cos(rotation) + camera.position.z * Math.sin(rotation)
   camera.position.y = camera.position.y * Math.sin(rotation) + camera.position.x * Math.cos(rotation)
   camera.position.z = camera.position.z * Math.cos(rotation) - camera.position.x * Math.sin(rotation)
@@ -304,7 +315,7 @@ function animateCamera() {
     }
     function noteOn(frequency, velocity) {
       var osc = oscillators[frequency] = context.createOscillator();
-      osc.type = 'sawtooth';
+      osc.type = 'sine';
       osc.frequency.value = frequency;
       osc.connect(context.destination);
       osc.start(context.currentTime);
@@ -449,9 +460,8 @@ function calculate(obj) {
   }
 
   obj.points.push(obj.p3.clone());
-
   obj.distancesNeedUpdate = true;
-  console.log(obj.points)
+ 
 }
 
 function calculateDistances(obj) {
