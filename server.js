@@ -1,5 +1,3 @@
-// THROWS NO ERRORS BUT NO CONNECTION
-
 const express = require('express')
 const app = express()
 const port = process.env.PORT || 4444
@@ -11,7 +9,6 @@ app.use(express.static(__dirname + '/node_modules'))
 app.use(express.static(__dirname + '/src/public/js'))
 
 io.on('connection', function(socket) {
-  console.log('socket bb connected cutie')
   socket.emit('midi', 'we\'ve cponnevtdd')
 
   socket.on('midi', midiMsg);
@@ -25,7 +22,6 @@ io.on('connection', function(socket) {
   })
 })
 app.get('/', function(req, res) {
-  //res.send('synesthesize server running bb')
   res.sendFile(__dirname + '/index.html')
 })
 
