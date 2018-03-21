@@ -11,7 +11,7 @@
   "devDependencies": {
     "babel-preset-env": "^1.6.1",
     "babelify": "^7.3.0",
-    "browserify": "^13.1.1",
+    "browserify": "^13.3.0",
     "budo": "^8.3.0",
     "tinyify": "^2.3.0"
   },
@@ -23,7 +23,7 @@
     "express": "^4.16.3",
     "glslify": "^5.0.2",
     "guigui": "^2.0.0",
-    "http": "^0.0.0",
+    "http": "0.0.0",
     "midi": "^0.9.5",
     "mouse-event-offset": "^3.0.2",
     "mouse-wheel": "^1.1.0",
@@ -31,7 +31,9 @@
     "socket.io": "^2.0.4",
     "three": "*",
     "utf-8-validate": "^4.0.0",
-    "web-midi-api": "^1.4.4"
+    "web-midi-api": "^1.4.4",
+    "webpack": "^4.1.1",
+    "webpack-cli": "^2.0.12"
   },
   "author": "Guillaume Gouessan",
   "license": "BSD-2-Clause"

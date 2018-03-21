@@ -4,8 +4,15 @@
   <title>~ synesthesize || 共感 ~</title>
   <link rel="shortcut icon" type="image/x-icon" href="favicon-test4.ico" />
   <meta charset="utf-8">
+  <!-- <script src='/index.css'></script> -->
+  <script src='http://localhost:4444/socket.io/socket.io.js'></script>
 </head>
 <body>
+  <header>
+    <div class='app-header'>
+      <h2>~ synesthesize || 共感 ~</h2>
+    </div>
+  </header>
   <script>
     var mobilecheck = function() {
       var check = false;
@@ -14,17 +21,19 @@
     };
     window.isMobile = mobilecheck()
   </script>
-  <script src="/socket.io/socket.io.js"></script>
+  <script src='/bundle.js'></script>     
   <script>
-    var socket = io.connect('http://localhost');
-    socket.on('midi', midiMsg);
-    function midiMsg(data) {
-      console.log(data);
-      socket.emit('externalMidi', data);
-      console.log(socket.id, ' sending midi msgs to users', data)
-    };
+    var socket = io.connect('http://localhost:4444')
+    socket.on('connection', function () {
+      console.log('client from: ' + socket.id)
+    })
+    // socket.on('midi', midiMsg)
+    //   function midiMsg(data) {
+    //     console.log(data)
+    //     socket.emit('externalMidi', data)
+    //     console.log(socket.id, ' sending midi events')
+    //   }
   </script>
-  <script src="index.js"></script>
-
+  
 </body>
 </html>

@@ -3,12 +3,12 @@ import WAGNER from '@superguigui/wagner'
 import BloomPass from '@superguigui/wagner/src/passes/bloom/MultiPassBloomPass'
 import FXAAPass from '@superguigui/wagner/src/passes/fxaa/FXAAPass'
 import resize from 'brindille-resize'
-import OrbitControls from './controls/OrbitControls'
-import { gui } from './utils/debug'
+import OrbitControls from './OrbitControls'
+import { gui } from './debug'
+
 
 /* ----------------------------- THREE JS SCENE ----------------------------------------------- */
 const THREE = require('three')
-const socket = require('socket.io')
 
 /* Custom settings */
 const SETTINGS = {
@@ -141,7 +141,6 @@ for (i = 0; i < parameters.length; i++) {
 
 // // Input Event Listeners
 
-/* Various event listeners */
 resize.addListener(onResize)
 
 /* create and launch main loop */
@@ -153,9 +152,8 @@ gui.add(SETTINGS, 'useComposer')
 
 /* -------------------------------------------------------------------------------- */
 
-/**
-  Resize canvas
-*/
+// function for handling canvas resizing
+
 function onResize () {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
@@ -163,9 +161,7 @@ function onResize () {
   composer.setSize(window.innerWidth , window.innerHeight)
 }
 
-/**
-  Render loop
-*/
+// render loop
 render()
 function render (dt) {
   controls.update()
@@ -188,7 +184,9 @@ const context = new AudioContext()
 const oscillators = {}
 let midi, data;
 
-//const socket = io()
+const io = require('../../../server.js')
+const socket = io();
+socket.on('externalMidi', gotExternalMidiMessage);
 
 // GETTING MIDI ACCESS
 navigator.requestMIDIAccess()
@@ -207,6 +205,24 @@ function onMIDIFailure() {
   console.warn("Not finding a MIDI controller");
 }
 
+// socket.on('midi', midiMsg)
+// function midiMsg(data) {
+//   console.log(data)
+//   socket.emit('externalMidi', data)
+//   console.log(socket.id, ' sending midi events')
+// }
+function gotExternalMidiMessage(data) {
+  console.log('external data received: ' + data.on, data.pitch, data.velocity);
+  // render data in window
+    socket.on('midi', midiMsg)
+    function midiMsg(data) {
+      console.log(data)
+      socket.emit('externalMidi', data)
+      console.log(socket.id, ' sending midi events')
+    }
+  playNote(data);
+}
+
 // GETTING MIDI DATA
 function onMIDImessage(messageData) {
   let midiEvent = messageData.data
@@ -219,7 +235,7 @@ function onMIDImessage(messageData) {
     pitch: midiEvent[1],
     velocity: midiEvent[2]
   }
-
+  socket.emit('midi', data)
   play(note);
 
   // creating new visuals with midi event
@@ -266,14 +282,15 @@ function onMIDImessage(messageData) {
 
   var line = new THREE.Line(geometry, material);
   scene.add(line);
-  //animateSpline()
+  //animateSpline() ? needed ? 
   console.log(line)
 
-  // emit to socket
+  // on successful midi message we sholud be emitting to socket
   // socket.emit('midi', note)
 
   }
 }
+
 // function to animate spline
 function animateSpline() {
   console.log('spline1: ' + line.position.x, line.position.y, line.position.z)
@@ -285,6 +302,7 @@ function animateSpline() {
   console.log('spline2: ' + line.position.x, line.position.y, line.position.z)
 
 }
+
 // camera position animate
 function animateCamera() {
   let rotation = 0.04
@@ -326,23 +344,10 @@ function animateCamera() {
     }
   }
 
-
-// setting up ability to receive external notes from other players
-
-socket.on('externalMidi', gotExternalMidiMessage)
-
-function gotExternalMidiMessage(data) {
-  let newItem = document.createElement('li')
-  newItem.appendChild(document.createTextNode('Note: ' + data.pitch + 'Velocity: ' + data.velocity))
-  newItem.className = 'externalMidi'
-  document.getElementById('midi-data').prepend(newItem)
-
-  playNote()
-}
-
 // Function for 3D Hilbert Curve -- should be moved out of file eventually COME BACK
+
 function hilbert3D(center, size, iterations, v0, v1, v2, v3, v4, v5, v6, v7) {
-  // Default Vars
+  // Default Variables
   var center = undefined !== center ? center : new THREE.Vector3(0, 0, 0),
     size = undefined !== size ? size : 10,
     half = size / 2,
@@ -421,7 +426,8 @@ function ConstantSpline(p0, p1, p2, p3, tmp, res, o, points, lPoints, steps, inc
   this.distancesNeedUpdate = distancesNeedUpdate
 }
 
-// FUNCTIONS FOR SPLINEDRAW
+// FUNCTIONS NEEDED FOR DRAWING CONSTANT SPLINE
+
 function calculate(obj) {
   // calculate points
   obj.d = 0;
