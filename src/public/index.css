@@ -1,0 +1,25 @@
+body {
+  background-color: black;
+  font-family: 'Nanum Gothic Coding', monospace;
+}
+.app-header {
+  background-color: black;
+  color: black;
+  padding-left: 1rem;
+  margin-top: 0;
+  margin-bottom: 0;
+  font-weight: 100;
+  font-size: 1.5rem;
+  letter-spacing: 0.6rem;
+}
+.app-name {
+  animation-name: title;
+  animation-duration: 15s;
+}
+
+@keyframes title {
+    0%   {color: red;}
+    25%  {color: yellow;}
+    50%  {color: blue;}
+    100% {color: black;}
+}

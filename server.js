@@ -6,21 +6,19 @@ const server = require('http').createServer(app)
 const io = require('socket.io')(server)
 
 app.use(express.static(__dirname + '/node_modules'))
-app.use(express.static(__dirname + '/src/public/js'))
+app.use(express.static(__dirname + '/src/public'))
 
-io.on('connection', function(socket) {
-  socket.emit('midi', 'we\'ve cponnevtdd')
+io.on('connection', newConnection)
 
-  socket.on('midi', midiMsg);
-  function midiMsg(data) {
-    socket.broadcast.emit('externalMidi', data);
-    console.log(socket.id, ' sending data to other users: ', data);
+function newConnection(socket) {
+  console.log('new connection from: ' + socket.id)
+  io.sockets.on('midi', midiMsg)
+    function midiMsg(data) {
+      console.log(data)
+      socket.emit('externalMidi', data)
+      }
   }
 
-  socket.on('externalMidi', (data) => {
-    console.log(data)
-  })
-})
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/index.html')
 })

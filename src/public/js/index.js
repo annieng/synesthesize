@@ -46,7 +46,16 @@ scene.add(backLight)
 frontLight.position.x = 20
 backLight.position.x = -20
 
+// audio context
+let ctx = newAudioContext()
+let audio = document.getElementById('music')
+let audioSrc = ctx.createMediaElementSource('music')
+let analyser = ctx.createAnalyser()
 
+audioSrc.connect(analyser)
+audioSrc.connect(ctx.destination)
+let frequencyData = new Uint8Array(analyser.frequency8inCount)
+audio.play()
 
 /* Actual content of the scene */
 
@@ -150,6 +159,7 @@ engine.start()
 /* some stuff with gui */
 gui.add(SETTINGS, 'useComposer')
 
+
 /* -------------------------------------------------------------------------------- */
 
 // function for handling canvas resizing
@@ -178,7 +188,6 @@ function render (dt) {
   }
 }
 
-
 /* ----------------------------- handling midi data --------------------------------*/
 const context = new AudioContext()
 const oscillators = {}
@@ -205,29 +214,26 @@ function onMIDIFailure() {
   console.warn("Not finding a MIDI controller");
 }
 
-// socket.on('midi', midiMsg)
-// function midiMsg(data) {
-//   console.log(data)
-//   socket.emit('externalMidi', data)
-//   console.log(socket.id, ' sending midi events')
-// }
+var socket = io.connect('http://localhost:4444')
+socket.on('externalMidi', gotExternalMidiMessage)
 function gotExternalMidiMessage(data) {
-  console.log('external data received: ' + data.on, data.pitch, data.velocity);
-  // render data in window
-    socket.on('midi', midiMsg)
-    function midiMsg(data) {
-      console.log(data)
-      socket.emit('externalMidi', data)
-      console.log(socket.id, ' sending midi events')
-    }
-  playNote(data);
+  console.log(data)
+  playNote(data)
+}
+socket.on('connection', function () {
+  console.log('client from: ' + socket.id)
+})
+socket.on('midi', midiMsg)
+function midiMsg(data) {
+  console.log(socket.id, ' sending midi events')
+  socket.emit('externalMidi', data)
 }
 
 // GETTING MIDI DATA
 function onMIDImessage(messageData) {
   let midiEvent = messageData.data
   console.log(midiEvent[0], midiEvent[1], midiEvent[2])
-  
+  console.log('testing changes')
   // SYNTH SOUNDS
 
   const note = {
@@ -235,7 +241,14 @@ function onMIDImessage(messageData) {
     pitch: midiEvent[1],
     velocity: midiEvent[2]
   }
-  socket.emit('midi', data)
+  
+  socket.on('midi', midiMsg)
+  function midiMsg(data) {
+    console.log(socket.id, ' sending midi events')
+    socket.emit('externalMidi', data)
+  }
+
+ 
   play(note);
 
   // creating new visuals with midi event
@@ -282,12 +295,7 @@ function onMIDImessage(messageData) {
 
   var line = new THREE.Line(geometry, material);
   scene.add(line);
-  //animateSpline() ? needed ? 
   console.log(line)
-
-  // on successful midi message we sholud be emitting to socket
-  // socket.emit('midi', note)
-
   }
 }
 
@@ -464,10 +472,8 @@ function calculate(obj) {
     obj.points.push(obj.res.clone());
 
   }
-
   obj.points.push(obj.p3.clone());
   obj.distancesNeedUpdate = true;
- 
 }
 
 function calculateDistances(obj) {
@@ -500,9 +506,7 @@ function reticulate(obj, settings) {
   }
 
   obj.lPoints = [];
-
   var l = [];
-
   var steps, distancePerStep;
 
   if (settings.steps) {
@@ -540,16 +544,10 @@ function reticulate(obj, settings) {
     }
     return d;
   }
-
   for (var j = 0; j < obj.points.length; j++) {
-
     if (obj.points[j].ac - d > distancePerStep) {
-
       d += splitSegment(current, obj.points[j], obj.lPoints);
-
     }
-
   }
   obj.lPoints.push(obj.points[obj.points.length - 1].clone());
-
 }
