@@ -46,17 +46,6 @@ scene.add(backLight)
 frontLight.position.x = 20
 backLight.position.x = -20
 
-// audio context
-let ctx = newAudioContext()
-let audio = document.getElementById('music')
-let audioSrc = ctx.createMediaElementSource('music')
-let analyser = ctx.createAnalyser()
-
-audioSrc.connect(analyser)
-audioSrc.connect(ctx.destination)
-let frequencyData = new Uint8Array(analyser.frequency8inCount)
-audio.play()
-
 /* Actual content of the scene */
 
 let hilbertPoints = hilbert3D(new THREE.Vector3(0, 0, 0), 250.0, 1, 0, 1, 2, 3, 4, 5, 6, 7);
