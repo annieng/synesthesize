@@ -13,7 +13,7 @@ body {
   margin-right: 10rem;
   letter-spacing: .15em;
   animation: 
-    typing 3.5s steps(40, end);
+    typing 5.5s steps(40, end);
   color: red;
   font-size: 2rem;
   font-family: 'IBM Plex Sans Condensed', sans-serif;

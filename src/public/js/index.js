@@ -42,8 +42,6 @@ camera.position.z = 100000
 camera.position.x = 90000
 camera.position.y = 90000
 
-
-
 /* Lights */
 const frontLight = new THREE.PointLight(0xFFFFFF, 1)
 const backLight = new THREE.PointLight(0xFFFFFF, 0.5)
@@ -136,12 +134,13 @@ for (i = 0; i < parameters.length; i++) {
   }
   // animation for line
   function animate() {
-    controls.update()
     requestAnimationFrame(animate)
+    controls.update()
     line.rotation.x += 0.01
     line.rotation.y += 0.01
     renderer.render(scene, camera);
   }
+
 
 
 // // Input Event Listeners
