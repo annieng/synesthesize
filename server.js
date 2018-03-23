@@ -23,6 +23,10 @@ app.get('/', function(req, res) {
   res.sendFile(__dirname + '/index.html')
 })
 
+app.get('/visualizer', function(req, res) {
+  res.sendFile(__dirname + 'visualizer.html')
+})
+
 server.listen(port)
 
 exports.io = io

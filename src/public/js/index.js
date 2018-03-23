@@ -33,10 +33,16 @@ const fxaaPass = new FXAAPass()
 /* Main scene and camera */
 const scene = new THREE.Scene()
 const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 100000)
-const controls = new OrbitControls(camera, {element: renderer.domElement, parent: renderer.domElement, distance: 10, phi: Math.PI * 0.5})
+const controls = new OrbitControls(camera, {element: renderer.domElement, parent: renderer.domElement, distance: 100, phi: Math.PI * 0.5})
+camera.lookAt(new THREE.Vector3(00, 0, 0));
+controls.autoRotate = true
+controls.autoRotateSpeed = 2.0
+
 camera.position.z = 100000
 camera.position.x = 90000
 camera.position.y = 90000
+
+
 
 /* Lights */
 const frontLight = new THREE.PointLight(0xFFFFFF, 1)
@@ -130,6 +136,7 @@ for (i = 0; i < parameters.length; i++) {
   }
   // animation for line
   function animate() {
+    controls.update()
     requestAnimationFrame(animate)
     line.rotation.x += 0.01
     line.rotation.y += 0.01
@@ -148,7 +155,6 @@ engine.start()
 /* some stuff with gui */
 gui.add(SETTINGS, 'useComposer')
 
-
 /* -------------------------------------------------------------------------------- */
 
 // function for handling canvas resizing
@@ -161,7 +167,7 @@ function onResize () {
 }
 
 // render loop
-render()
+//render()
 function render (dt) {
   controls.update()
   if (SETTINGS.useComposer) {
@@ -171,11 +177,12 @@ function render (dt) {
     composer.pass(fxaaPass)
     composer.toScreen()
   } else {
-    line.rotation.x += 0.01
-    line.rotation.y += 0.01
+    // line.rotation.x += 0.01
+    // line.rotation.y += 0.01
     renderer.render(scene, camera)
   }
 }
+
 
 /* ----------------------------- handling midi data --------------------------------*/
 const context = new AudioContext()
