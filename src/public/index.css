@@ -13,8 +13,7 @@ body {
   margin-right: 10rem;
   letter-spacing: .15em;
   animation: 
-    typing 3.5s steps(40, end)
-    blink-caret 1s step-end infinite;
+    typing 3.5s steps(40, end);
   color: red;
   font-size: 2rem;
   font-family: 'IBM Plex Sans Condensed', sans-serif;
@@ -41,7 +40,4 @@ a {
 a:hover {
   color: yellow;
 }
-@keyframes blink-caret {
-  from, to { border-color: transparent }
-  50% { border-color: red; }
-}
+
