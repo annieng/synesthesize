@@ -1,45 +1,52 @@
-threejs-starter-kit
-===================
+synesthesize || 共感 [gong gan]
+==============================
+This project is my capstone project done during my last week and a half completing the 10 week full time web development bootcamp at Brainstation Vancouver.
 
-My current worlflow for quick THREE.js prototypes.
+v.1.0
+- currently taking MIDI input only, simply plug in a MIDI player, run the program and watch your music visualize in 3 dimensional space
 
-![screenshot](/screenshot.png)
+Synesthesia is a perceptual phenomenon in which stimulation in one sensory field will cause involuntary experiences in another sensory domain. Those afflicted with synesthesia may oftentimes experience visual effects when hearing sounds or experience bodily sensations when seeing a color. This would be a form of projective synesthesia which is the inspiration for this project.
 
-## Usage
-After cloning install all node dependencies
+Have you ever been to a show and watched a dj or band play amazing music but wish there was something more exciting to watch? Most musicians would love to provide a visual experience for their audience as well but the barriers to entry are high. Visuals are time-consuming or costly for a musician struggling to make ends meet.  
+
+共感 removes those barriers and simply analyzes an audio input and uses certain preprogrammed visuals and predefined behaviours to produce spectacular patterns and visualizations  
+
+共感 (Gòng gǎn) is a web application for the musically inclined to input live audio into software that provides visualizations that are audio reactive and provide a synesthetic experience for the audience member. 共感 provides a low-barrier method to a new perceptual experience. 
+
+// ![screenshot](/screenshot.png)
+
+## using synesthesize on your computer
+after cloning install all node dependencies
 ```bash
 npm i
 ```
-
-Then launch the main task to open budo livereload server  
+then launch the main task to open budo livereload server  
 ```bash
 npm start
 ```
+you are ready to go !
 
-You are good to go !
-
-If you need a minified build just run
+if you need a minified build just run
 ```bash
 npm run build
 ```
-Then put the `/index.html` and `/index.js` (+ any assets that you might be using) on your server.
 
-## Features
-- ES6 with [Babel](http://babeljs.io)
-- [Budo](https://github.com/mattdesl/budo) (browserify local server with livereload)
-- [Glslify](https://github.com/glslify/glslify) (browserify transform for glsl)
-- My personnal [GUI](http://github.com/superguigui/guigui#dev)
-- Basic asset preloader (you probably need to extend it for your needs)
-- OrbitControls
-- Simple setup with my ideal file structure
-- Postprocessing with [my fork](https://github.com/superguigui/Wagner) of [spite's WAGNER](https://github.com/spite/Wagner)
+this project is a work in progress. some future plans include: 
 
-## File Structure and coding style
-I like to create "Objects" classes in `src/objects` that contain elements from my scene. They usually extend `THREE.Object3D` so that they can be added to a parent, have positions and rotations etc... I also sometime extend `THREE.Mesh` directly but it can be a bit restrictive since in that case you need to prepare all geometries and material in the constructor before the call to `super()` without being able to use `this`.
+v.2
+- Live audio input from other software such as Ableton Live, Serato DJ, Native instruments etc. 
+- Database to store audiovisual performance for future reference
+- Ability to add extra effects during performance
 
-Also i like to avoid using the `THREE` global keyword and instead I import only the Objects that I need. This is pointless but it might be useful in the tree-shaking future / alternate reality.
-```js
-import { Object3D, Mesh, MeshBasicMaterial } from THREE
-```
+v.3
+- Login/Authentication for users
+- Joining private screens/music rooms
+- Software stage rather than a simple web app
+- Ability to add own visuals and own effects
 
-I try to respect the [Standard](https://standardjs.com) coding style.
+v.4
+- mobile application
+
+
+
+Many thanks to @superguigui for his three.js preloader starter kit 
