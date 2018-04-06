@@ -13,7 +13,9 @@ Have you ever been to a show and watched a dj or band play amazing music but wis
 
 共感 (Gòng gǎn) is a web application for the musically inclined to input live audio into software that provides visualizations that are audio reactive and provide a synesthetic experience for the audience member. 共感 provides a low-barrier method to a new perceptual experience. 
 
-// ![screenshot](/screenshot.png)
+![screenshot1](/synesthesize-landing.gif)
+![screenshot2](/synesthesize-gif1.gif)
+![screenshot3](/synesthesize-gif2.gif)
 
 ## using synesthesize on your computer
 after cloning install all node dependencies
